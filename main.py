@@ -43,6 +43,7 @@ from train import train
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Testing
+<<<<<<< HEAD
 test_mode = True  # Set to True to run in test mode (no training)
 test_model_number = 10000
 test_num_episodes = 100  # Number of episodes to run in test mode
@@ -55,15 +56,16 @@ test_model_path = f"models/dqn_model_episode_{test_model_number}.pth"
 
 hyperparams = {
     # Learning parameters
-    "batch_size": 128,
+    "hidden_dim": 256,
+    "batch_size": 256,
     "epsilon": 1.0, # Probability of choosing a random action
-    "epsilon_decay": 0.9995,
+    "epsilon_decay": 0.99995,
     "epsilon_min": 0.01,
-    "num_episodes": 10000,
+    "num_episodes": 1000000,
     "learning_rate": 1e-4,
     "gamma": 0.999,
     "target_update_freq": 1000,
-    "replay_buffer_size": 50000,
+    "replay_buffer_size": 100000,
 
     # Cosmetic/Logging parameters
     "EpisodeRewardDisplayFreq": 100,
@@ -75,8 +77,8 @@ hyperparams = {
 input_dim = 5
 output_dim = 2
 
-dqn = BirdDQN(input_dim, output_dim).to(device)
-target_dqn = BirdDQN(input_dim, output_dim).to(device)
+dqn = BirdDQN(input_dim, output_dim, hidden_dim=hyperparams["hidden_dim"]).to(device)
+target_dqn = BirdDQN(input_dim, output_dim, hidden_dim=hyperparams["hidden_dim"]).to(device)
 target_dqn.load_state_dict(dqn.state_dict()) # Initializing target DQN with same weights
 
 optimizer = optim.Adam(dqn.parameters(), lr=hyperparams["learning_rate"])
