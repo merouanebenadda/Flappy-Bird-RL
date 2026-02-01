@@ -45,14 +45,21 @@ hyperparams = {
     "epsilon_min": 0.01,
     "num_episodes": 1000,
     "learning_rate": 1e-4,
-    "gamma": 0.99
+    "gamma": 0.99,
+    "target_update_freq": 100,
 }
 
 
 # Initialize DQN and Replay Buffer
 input_dim = 5
 output_dim = 2
+
 dqn = BirdDQN(input_dim, output_dim).to(device)
+target_dqn = BirdDQN(input_dim, output_dim).to(device)
+target_dqn.load_state_dict(dqn.state_dict()) # Initializing target DQN with same weights
+
+optimizer = optim.Adam(dqn.parameters(), lr=hyperparams["learning_rate"])
+
 replay_buffer = ReplayBuffer(max_size=50000)
 
 # Create the environment
