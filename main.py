@@ -59,8 +59,8 @@ hyperparams = {
     "target_update_freq": 1000,
 
     # Cosmetic/Logging parameters
-    "EpisodeRewardDisplayFreq": 10,
-    "ModelSaveFreq": 500
+    "EpisodeRewardDisplayFreq": 100,
+    "ModelSaveFreq": 2000
 }
 
 
