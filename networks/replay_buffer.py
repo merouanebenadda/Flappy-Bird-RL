@@ -22,6 +22,9 @@ class ReplayBuffer():
     def sample(self, batch_size):
         """
         Randomly sample a batch of experiences from the buffer.
+
+        Outputs:
+            A list of Experience dataclass instances (to be converted to tensors by the dqn)
         """
         batch = rd.sample(self.buffer, batch_size) # This might be a bottleneck (O(n) complexity)
         return batch
