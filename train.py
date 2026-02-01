@@ -8,8 +8,14 @@ import random as rd
 import numpy as np
 from networks import BirdDQN, ReplayBuffer
 
-
 def train(env, device, dqn, target_dqn, replay_buffer, optimizer, hyperparams):
+    reward_map = {
+        -1.0: hyperparams.get("r_death", -1.0),
+        -0.5: hyperparams.get("r_top", -0.5),
+         0.1: hyperparams.get("r_alive", 0.1),
+         1.0: hyperparams.get("r_pipe", 1.0)
+    }
+
     step = 0
     rewards_history = []
     score_history = []
@@ -30,6 +36,7 @@ def train(env, device, dqn, target_dqn, replay_buffer, optimizer, hyperparams):
                 action = torch.argmax(q_values).item()
 
             observation, reward, terminated, truncated, info = env.step(action)
+            reward = reward_map.get(reward, reward)
             episode_reward += reward
             previous_state = state
             state = observation[[3, 4, 5, 9, 10]] 
