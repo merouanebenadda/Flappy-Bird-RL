@@ -3,7 +3,7 @@
 
 Notes:
     Remove slots=True in Experience dataclass if using Python version < 3.10
-    
+
 
 Observation Space from env.step(action):
     0: the last pipe's horizontal position
@@ -43,8 +43,9 @@ from train import train
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Testing
-test_mode = False  # Set to True to run in test mode (no training)
-test_model_number = 26000
+<<<<<<< HEAD
+test_mode = True  # Set to True to run in test mode (no training)
+test_model_number = 10000
 test_num_episodes = 100  # Number of episodes to run in test mode
 
 test_model_path = f"models/dqn_model_episode_{test_model_number}.pth"
