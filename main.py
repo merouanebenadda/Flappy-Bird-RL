@@ -1,4 +1,10 @@
 """
+***Implementation of Deep Q-Network (DQN) for Flappy Bird using PyTorch and Gymnasium***
+
+Notes:
+    Remove slots=True in Experience dataclass if using Python version < 3.10
+    
+
 Observation Space from env.step(action):
     0: the last pipe's horizontal position
     1: the last top pipe's vertical position
@@ -37,8 +43,8 @@ from train import train
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Testing
-test_mode = False  # Set to True to run in test mode (no training)
-test_model_number = 12000
+test_mode = True  # Set to True to run in test mode (no training)
+test_model_number = 26000
 test_num_episodes = 100  # Number of episodes to run in test mode
 
 test_model_path = f"models/dqn_model_episode_{test_model_number}.pth"
@@ -57,10 +63,11 @@ hyperparams = {
     "learning_rate": 1e-4,
     "gamma": 0.999,
     "target_update_freq": 1000,
+    "replay_buffer_size": 50000,
 
     # Cosmetic/Logging parameters
-    "EpisodeRewardDisplayFreq": 10,
-    "ModelSaveFreq": 500
+    "EpisodeRewardDisplayFreq": 100,
+    "ModelSaveFreq": 2000
 }
 
 
@@ -74,7 +81,7 @@ target_dqn.load_state_dict(dqn.state_dict()) # Initializing target DQN with same
 
 optimizer = optim.Adam(dqn.parameters(), lr=hyperparams["learning_rate"])
 
-replay_buffer = ReplayBuffer(max_size=50000)
+replay_buffer = ReplayBuffer(max_size=hyperparams["replay_buffer_size"])
 
 # Create the environment
 render = "human" if test_mode else None
