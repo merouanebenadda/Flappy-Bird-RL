@@ -12,6 +12,7 @@ from networks import BirdDQN, ReplayBuffer
 def train(env, device, dqn, target_dqn, replay_buffer, optimizer, hyperparams):
     step = 0
     rewards_history = []
+    score_history = []
     # Playing loop
     for episode in range(1, hyperparams["num_episodes"]+1):
         observation, info = env.reset()
@@ -70,9 +71,13 @@ def train(env, device, dqn, target_dqn, replay_buffer, optimizer, hyperparams):
                 break
 
         rewards_history.append(episode_reward)
+        score_history.append(info.get("score", 0))
         if episode % hyperparams["EpisodeRewardDisplayFreq"] == 0:
             average_reward = np.mean(rewards_history[-hyperparams["EpisodeRewardDisplayFreq"]:])
-            print(f"Episode {episode}, Step {step}, Epsilon {hyperparams['epsilon']:.4f}, Average reward last {hyperparams['EpisodeRewardDisplayFreq']} {average_reward:.2f}")
+            average_score = np.mean(score_history[-hyperparams["EpisodeRewardDisplayFreq"]:])
+            print(f"Episode: {episode}, Step {step}, Epsilon: {hyperparams['epsilon']:.4f}, ", 
+                  f"Average reward (last {hyperparams['EpisodeRewardDisplayFreq']} episodes): {average_reward:.2f}, ",
+                  f"Average score (last {hyperparams['EpisodeRewardDisplayFreq']} episodes): {average_score:.2f}")
 
         if episode % hyperparams["ModelSaveFreq"] == 0:
             torch.save(dqn.state_dict(), f"models/dqn_model_episode_{episode}.pth")

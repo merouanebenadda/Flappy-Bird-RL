@@ -55,16 +55,16 @@ test_model_path = f"models/dqn_model_episode_{test_model_number}.pth"
 
 hyperparams = {
     # Learning parameters
-    "hidden_dim": 256,
-    "batch_size": 256,
+    "hidden_dim": 128,
+    "batch_size": 128,
     "epsilon": 1.0, # Probability of choosing a random action
-    "epsilon_decay": 0.99995,
+    "epsilon_decay": 0.999,
     "epsilon_min": 0.01,
     "num_episodes": 1000000,
-    "learning_rate": 1e-4,
-    "gamma": 0.999,
-    "target_update_freq": 1000,
-    "replay_buffer_size": 100000,
+    "learning_rate": 4e-4,
+    "gamma": 0.95,
+    "target_update_freq": 2000,
+    "replay_buffer_size": 50000,
 
     # Cosmetic/Logging parameters
     "EpisodeRewardDisplayFreq": 100,
