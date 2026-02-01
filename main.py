@@ -40,7 +40,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 hyperparams = {
     "batch_size": 64,
-    "epsilon": 0.1, # Probability of choosing a random action
+    "epsilon": 1.0, # Probability of choosing a random action
     "epsilon_decay": 0.999,
     "epsilon_min": 0.01,
     "num_episodes": 1000,
@@ -63,8 +63,8 @@ optimizer = optim.Adam(dqn.parameters(), lr=hyperparams["learning_rate"])
 replay_buffer = ReplayBuffer(max_size=50000)
 
 # Create the environment
-env = gym.make("FlappyBird-v0", render_mode="human")
+env = gym.make("FlappyBird-v0", use_lidar=False) # use render=True for visualization
 
-
+train(env, device, dqn, target_dqn, replay_buffer, optimizer, hyperparams)
 
 env.close()

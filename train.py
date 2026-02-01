@@ -12,20 +12,23 @@ from networks import BirdDQN, ReplayBuffer
 def train(env, device, dqn, target_dqn, replay_buffer, optimizer, hyperparams):
     step = 0
     # Playing loop
-    for _ in range(hyperparams["num_episodes"]):
+    for episode in range(hyperparams["num_episodes"]):
         observation, info = env.reset()
         state = observation[[3, 4, 5, 9, 10]] 
+
+        episode_reward = 0
 
         while True:
             if rd.random() < hyperparams["epsilon"]:
                 action = env.action_space.sample()
             else:
-                state_tensor = torch.FloatTensor(state).unsqueeze(0).to(device)
+                state_tensor = torch.as_tensor(np.array(state), dtype=torch.float32).unsqueeze(0).to(device)
                 with torch.no_grad():
                     q_values = dqn(state_tensor)
                 action = torch.argmax(q_values).item()
 
             observation, reward, terminated, truncated, info = env.step(action)
+            episode_reward += reward
             previous_state = state
             state = observation[[3, 4, 5, 9, 10]] 
             replay_buffer.add(previous_state, action, reward, state, terminated or truncated)
@@ -57,14 +60,18 @@ def train(env, device, dqn, target_dqn, replay_buffer, optimizer, hyperparams):
                 loss.backward()
                 optimizer.step()
 
-                step += 1
+            step += 1
 
-                if step % hyperparams["target_update_freq"] == 0:
-                    target_dqn.load_state_dict(dqn.state_dict())
-
+            if step % hyperparams["target_update_freq"] == 0:
+                target_dqn.load_state_dict(dqn.state_dict())
 
             if terminated or truncated:
                 break
+
+        
+        if episode % 10 == 0:
+                print(f"Episode {episode}, Step {step}, Epsilon {hyperparams['epsilon']:.4f}, Episode reward {episode_reward:.2f}")
+
         
         hyperparams["epsilon"] *= hyperparams["epsilon_decay"]
         hyperparams["epsilon"] = max(hyperparams["epsilon"], hyperparams["epsilon_min"])
