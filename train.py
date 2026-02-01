@@ -22,7 +22,12 @@ def train(env, device, dqn, target_dqn, replay_buffer, optimizer, hyperparams):
     # Playing loop
     for episode in range(1, hyperparams["num_episodes"]+1):
         observation, info = env.reset()
-        state = observation[[3, 4, 5, 9, 10]] 
+        state = np.array([
+                observation[3], 
+                observation[4] - observation[9], 
+                observation[5] - observation[9], 
+                observation[10]
+            ], dtype=np.float32) # We use relative positions to generalize better
 
         episode_reward = 0
 
@@ -39,7 +44,12 @@ def train(env, device, dqn, target_dqn, replay_buffer, optimizer, hyperparams):
             reward = reward_map.get(reward, reward)
             episode_reward += reward
             previous_state = state
-            state = observation[[3, 4, 5, 9, 10]] 
+            state = np.array([
+                observation[3], 
+                observation[4] - observation[9], 
+                observation[5] - observation[9], 
+                observation[10]
+            ], dtype=np.float32) # We use relative positions to generalize better
             replay_buffer.add(previous_state, action, reward, state, terminated or truncated)
 
             # Learning step

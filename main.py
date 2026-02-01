@@ -56,19 +56,19 @@ test_model_path = f"models/dqn_model_episode_{test_model_number}.pth"
 
 hyperparams = {
     # Learning parameters
-    "hidden_dim": 128,
-    "batch_size": 128,
+    "hidden_dim": 64,
+    "batch_size": 64,
     "epsilon": 1.0, # Probability of choosing a random action
-    "epsilon_decay": 0.999,
+    "epsilon_decay": 0.9995,
     "epsilon_min": 0.01,
     "num_episodes": 1000000,
-    "learning_rate": 1e-4,
+    "learning_rate": 5e-5,
     "gamma": 0.99,
-    "target_update_freq": 2000,
+    "target_update_freq": 1000,
     "replay_buffer_size": 50000,
 
     # Custom reward parameters
-    "r_death": -5.0,
+    "r_death": -2.0,
     "r_top": -0.5,
     "r_alive": 0.1,
     "r_pipe": 5.0,
@@ -80,7 +80,7 @@ hyperparams = {
 
 
 # Initialize DQN and Replay Buffer
-input_dim = 5
+input_dim = 4
 output_dim = 2
 
 dqn = BirdDQN(input_dim, output_dim, hidden_dim=hyperparams["hidden_dim"]).to(device)
@@ -102,7 +102,12 @@ if test_mode:
         observation, info = env.reset()
         done = False
         while not done:
-            state = observation[[3, 4, 5, 9, 10]]
+            state = np.array([
+                observation[3], 
+                observation[4] - observation[9],  
+                observation[5] - observation[9], 
+                observation[10]
+            ], dtype=np.float32) # We use relative positions to generalize better
             state_tensor = torch.as_tensor(np.array(state), dtype=torch.float32).unsqueeze(0).to(device)
             
             with torch.no_grad():
