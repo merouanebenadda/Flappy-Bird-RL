@@ -69,8 +69,11 @@ def train(env, device, dqn, target_dqn, replay_buffer, optimizer, hyperparams):
                 break
 
         
-        if episode % 10 == 0:
+        if episode % hyperparams["EpisodeRewardDisplayFreq"] == 0:
                 print(f"Episode {episode}, Step {step}, Epsilon {hyperparams['epsilon']:.4f}, Episode reward {episode_reward:.2f}")
+
+        if episode % hyperparams["ModelSaveFreq"] == 0:
+            torch.save(dqn.state_dict(), f"models/dqn_model_episode_{episode}.pth")
 
         
         hyperparams["epsilon"] *= hyperparams["epsilon_decay"]

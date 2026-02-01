@@ -28,6 +28,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+import numpy as np
 import gymnasium as gym
 import flappy_bird_gymnasium
 from networks import BirdDQN, ReplayBuffer
@@ -35,18 +36,31 @@ from train import train
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+# Testing
+test_mode = True  # Set to True to run in test mode (no training)
+test_model_number = 4900
+test_num_episodes = 100  # Number of episodes to run in test mode
+
+test_model_path = f"models/dqn_model_episode_{test_model_number}.pth"
+
+
 
 # Hyperparameters
 
 hyperparams = {
+    # Learning parameters
     "batch_size": 64,
     "epsilon": 1.0, # Probability of choosing a random action
     "epsilon_decay": 0.999,
     "epsilon_min": 0.01,
-    "num_episodes": 1000,
+    "num_episodes": 10000,
     "learning_rate": 1e-4,
     "gamma": 0.99,
     "target_update_freq": 100,
+
+    # Cosmetic/Logging parameters
+    "EpisodeRewardDisplayFreq": 10,
+    "ModelSaveFreq": 500
 }
 
 
@@ -63,8 +77,26 @@ optimizer = optim.Adam(dqn.parameters(), lr=hyperparams["learning_rate"])
 replay_buffer = ReplayBuffer(max_size=50000)
 
 # Create the environment
-env = gym.make("FlappyBird-v0", use_lidar=False) # use render=True for visualization
+render = "human" if test_mode else None
+env = gym.make("FlappyBird-v0", use_lidar=False, render_mode=render)
 
-train(env, device, dqn, target_dqn, replay_buffer, optimizer, hyperparams)
+if test_mode:
+    dqn.load_state_dict(torch.load(test_model_path, map_location=device))
+    dqn.eval()
+    for ep in range(test_num_episodes):
+        observation, info = env.reset()
+        done = False
+        while not done:
+            state = observation[[3, 4, 5, 9, 10]]
+            state_tensor = torch.as_tensor(np.array(state), dtype=torch.float32).unsqueeze(0).to(device)
+            
+            with torch.no_grad():
+                q_values = dqn(state_tensor)
+            
+            action = torch.argmax(q_values).item()
+            observation, reward, terminated, truncated, info = env.step(action)
+            done = terminated or truncated
+else:
+    train(env, device, dqn, target_dqn, replay_buffer, optimizer, hyperparams)
 
 env.close()
