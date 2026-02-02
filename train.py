@@ -8,14 +8,26 @@ import random as rd
 import numpy as np
 from networks import BirdDQN, ReplayBuffer
 
-
 def train(env, device, dqn, target_dqn, replay_buffer, optimizer, hyperparams):
+    reward_map = {
+        -1.0: hyperparams.get("r_death", -1.0),
+        -0.5: hyperparams.get("r_top", -0.5),
+         0.1: hyperparams.get("r_alive", 0.1),
+         1.0: hyperparams.get("r_pipe", 1.0)
+    }
+
     step = 0
     rewards_history = []
+    score_history = []
     # Playing loop
     for episode in range(1, hyperparams["num_episodes"]+1):
         observation, info = env.reset()
-        state = observation[[3, 4, 5, 9, 10]] 
+        state = np.array([
+                observation[3], 
+                observation[4] - observation[9], 
+                observation[5] - observation[9], 
+                observation[10]
+            ], dtype=np.float32) # We use relative positions to generalize better
 
         episode_reward = 0
 
@@ -29,9 +41,15 @@ def train(env, device, dqn, target_dqn, replay_buffer, optimizer, hyperparams):
                 action = torch.argmax(q_values).item()
 
             observation, reward, terminated, truncated, info = env.step(action)
+            reward = reward_map.get(reward, reward)
             episode_reward += reward
             previous_state = state
-            state = observation[[3, 4, 5, 9, 10]] 
+            state = np.array([
+                observation[3], 
+                observation[4] - observation[9], 
+                observation[5] - observation[9], 
+                observation[10]
+            ], dtype=np.float32) # We use relative positions to generalize better
             replay_buffer.add(previous_state, action, reward, state, terminated or truncated)
 
             # Learning step
@@ -70,9 +88,13 @@ def train(env, device, dqn, target_dqn, replay_buffer, optimizer, hyperparams):
                 break
 
         rewards_history.append(episode_reward)
+        score_history.append(info.get("score", 0))
         if episode % hyperparams["EpisodeRewardDisplayFreq"] == 0:
             average_reward = np.mean(rewards_history[-hyperparams["EpisodeRewardDisplayFreq"]:])
-            print(f"Episode {episode}, Step {step}, Epsilon {hyperparams['epsilon']:.4f}, Average reward last {hyperparams['EpisodeRewardDisplayFreq']} {average_reward:.2f}")
+            average_score = np.mean(score_history[-hyperparams["EpisodeRewardDisplayFreq"]:])
+            print(f"Episode: {episode}, Step {step}, Epsilon: {hyperparams['epsilon']:.4f}, ", 
+                  f"Average reward (last {hyperparams['EpisodeRewardDisplayFreq']} episodes): {average_reward:.2f}, ",
+                  f"Average score (last {hyperparams['EpisodeRewardDisplayFreq']} episodes): {average_score:.2f}")
 
         if episode % hyperparams["ModelSaveFreq"] == 0:
             torch.save(dqn.state_dict(), f"models/dqn_model_episode_{episode}.pth")
