@@ -8,7 +8,7 @@ import random as rd
 import numpy as np
 from networks import BirdDQN, ReplayBuffer
 
-def train(env, device, dqn, target_dqn, replay_buffer, optimizer, hyperparams):
+def train(env, device, dqn, target_dqn, replay_buffer, optimizer, extract_features, hyperparams):
     reward_map = {
         -1.0: hyperparams.get("r_death", -1.0),
         -0.5: hyperparams.get("r_top", -0.5),
@@ -22,12 +22,7 @@ def train(env, device, dqn, target_dqn, replay_buffer, optimizer, hyperparams):
     # Playing loop
     for episode in range(1, hyperparams["num_episodes"]+1):
         observation, info = env.reset()
-        state = np.array([
-                observation[3], 
-                observation[4] - observation[9], 
-                observation[5] - observation[9], 
-                observation[10]
-            ], dtype=np.float32) # We use relative positions to generalize better
+        state = extract_features(observation)
 
         episode_reward = 0
 
@@ -44,12 +39,7 @@ def train(env, device, dqn, target_dqn, replay_buffer, optimizer, hyperparams):
             reward = reward_map.get(reward, reward)
             episode_reward += reward
             previous_state = state
-            state = np.array([
-                observation[3], 
-                observation[4] - observation[9], 
-                observation[5] - observation[9], 
-                observation[10]
-            ], dtype=np.float32) # We use relative positions to generalize better
+            state = extract_features(observation) # We use relative positions to generalize better
             replay_buffer.add(previous_state, action, reward, state, terminated or truncated)
 
             # Learning step

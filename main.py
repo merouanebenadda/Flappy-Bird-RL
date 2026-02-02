@@ -55,21 +55,21 @@ test_model_path = f"models/dqn_model_episode_{test_model_number}.pth"
 
 hyperparams = {
     # Learning parameters
-    "hidden_dim": 64,
-    "batch_size": 64,
+    "hidden_dim": 128,
+    "batch_size": 256,
     "epsilon": 1.0, # Probability of choosing a random action
     "epsilon_decay": 0.9995,
     "epsilon_min": 0.01,
     "num_episodes": 1000000,
-    "learning_rate": 5e-5,
+    "learning_rate": 1e-4,
     "gamma": 0.99,
     "target_update_freq": 1000,
     "replay_buffer_size": 50000,
 
     # Custom reward parameters
-    "r_death": -2.0,
-    "r_top": -0.5,
-    "r_alive": 0.1,
+    "r_death": -10.0,
+    "r_top": -1.0,
+    "r_alive": 0.01,
     "r_pipe": 5.0,
 
     # Cosmetic/Logging parameters
@@ -77,9 +77,23 @@ hyperparams = {
     "ModelSaveFreq": 2000
 }
 
+# Features extraction
+def extract_features(observation):
+    """
+    Defines which features to extract from the observation space. 
+    Refer to the observation space description above.
+    """
+    states = np.array([
+                observation[3], 
+                observation[4] - observation[9],  
+                observation[5] - observation[9],
+                observation[8] - observation[9],
+                observation[10]
+            ], dtype=np.float32)
+    return states
 
 # Initialize DQN and Replay Buffer
-input_dim = 4
+input_dim = 5 # Update based on extracted features
 output_dim = 2
 
 dqn = BirdDQN(input_dim, output_dim, hidden_dim=hyperparams["hidden_dim"]).to(device)
@@ -97,8 +111,8 @@ env = gym.make("FlappyBird-v0", use_lidar=False, render_mode=render)
 if test_mode:
     dqn.load_state_dict(torch.load(test_model_path, map_location=device))
     dqn.eval()
-    test(env, device, dqn, test_num_episodes)
+    test(env, device, dqn, test_num_episodes, extract_features)
 else:
-    train(env, device, dqn, target_dqn, replay_buffer, optimizer, hyperparams)
+    train(env, device, dqn, target_dqn, replay_buffer, optimizer, extract_features, hyperparams)
 
 env.close()

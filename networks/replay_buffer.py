@@ -2,7 +2,7 @@ from collections import deque
 from dataclasses import dataclass
 import random as rd
 
-@dataclass#(slots=True) # Denying dynamic attributes for memory efficiency
+@dataclass(slots=True) # Denying dynamic attributes for memory efficiency
 class Experience:
     state: any
     action: any
