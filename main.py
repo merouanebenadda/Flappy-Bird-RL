@@ -43,9 +43,8 @@ from train import train
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Testing
-<<<<<<< HEAD
 test_mode = True  # Set to True to run in test mode (no training)
-test_model_number = 10000
+test_model_number = 84000
 test_num_episodes = 100  # Number of episodes to run in test mode
 
 test_model_path = f"models/dqn_model_episode_{test_model_number}.pth"
@@ -56,7 +55,7 @@ test_model_path = f"models/dqn_model_episode_{test_model_number}.pth"
 
 hyperparams = {
     # Learning parameters
-    "hidden_dim": 256,
+    "hidden_dim": 128,
     "batch_size": 256,
     "epsilon": 1.0, # Probability of choosing a random action
     "epsilon_decay": 0.99995,
