@@ -39,18 +39,17 @@ import gymnasium as gym
 import flappy_bird_gymnasium
 from networks import BirdDQN, ReplayBuffer
 from train import train
+from test import test
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Testing
 
 test_mode = False  # Set to True to run in test mode (no training)
-test_model_number = 10000
+test_model_number = 8000
 test_num_episodes = 100  # Number of episodes to run in test mode
 
 test_model_path = f"models/dqn_model_episode_{test_model_number}.pth"
-
-
 
 # Hyperparameters
 
@@ -98,24 +97,7 @@ env = gym.make("FlappyBird-v0", use_lidar=False, render_mode=render)
 if test_mode:
     dqn.load_state_dict(torch.load(test_model_path, map_location=device))
     dqn.eval()
-    for ep in range(test_num_episodes):
-        observation, info = env.reset()
-        done = False
-        while not done:
-            state = np.array([
-                observation[3], 
-                observation[4] - observation[9],  
-                observation[5] - observation[9], 
-                observation[10]
-            ], dtype=np.float32) # We use relative positions to generalize better
-            state_tensor = torch.as_tensor(np.array(state), dtype=torch.float32).unsqueeze(0).to(device)
-            
-            with torch.no_grad():
-                q_values = dqn(state_tensor)
-            
-            action = torch.argmax(q_values).item()
-            observation, reward, terminated, truncated, info = env.step(action)
-            done = terminated or truncated
+    test(env, device, dqn, test_num_episodes)
 else:
     train(env, device, dqn, target_dqn, replay_buffer, optimizer, hyperparams)
 
