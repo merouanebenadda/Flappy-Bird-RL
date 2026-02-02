@@ -62,8 +62,8 @@ def train(env, device, dqn, target_dqn, replay_buffer, optimizer, extract_featur
                     max_next_q_values, _ = torch.max(next_q_values, dim=1)
                     expected_q_values = rewards + (1 - dones) * hyperparams["gamma"] * max_next_q_values # Bellman equation
 
-
-                loss = torch.nn.functional.mse_loss(current_q_values, expected_q_values.unsqueeze(1))             
+                # We use Huber loss (Smooth L1 Loss) for stability instead of MSE
+                loss = torch.nn.functional.smooth_l1_loss(current_q_values, expected_q_values.unsqueeze(1))             
 
                 optimizer.zero_grad()
                 loss.backward()
