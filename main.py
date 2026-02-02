@@ -46,31 +46,31 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # Testing
 
 test_mode = False  # Set to True to run in test mode (no training)
-test_model_number = 8000
+test_model_number = 64000 
 test_num_episodes = 100  # Number of episodes to run in test mode
 
-test_model_path = f"models/dqn_model_episode_{test_model_number}.pth"
+test_model_path = f"saved_models/dqn_model_episode_{test_model_number}.pth"
 
 # Hyperparameters
 
 hyperparams = {
     # Learning parameters
-    "hidden_dim": 128,
-    "batch_size": 256,
+    "hidden_dim": 256,
+    "batch_size": 512,
     "epsilon": 1.0, # Probability of choosing a random action
-    "epsilon_decay": 0.9995,
+    "epsilon_decay": 0.9999,
     "epsilon_min": 0.01,
     "num_episodes": 1000000,
     "learning_rate": 1e-4,
     "gamma": 0.99,
     "target_update_freq": 1000,
-    "replay_buffer_size": 50000,
+    "replay_buffer_size": 100000,
 
     # Custom reward parameters
     "r_death": -10.0,
     "r_top": -1.0,
-    "r_alive": 0.01,
-    "r_pipe": 5.0,
+    "r_alive": 0.05,
+    "r_pipe": 15.0,
 
     # Cosmetic/Logging parameters
     "EpisodeRewardDisplayFreq": 100,
