@@ -45,7 +45,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Testing
 
-test_mode = True  # Set to True to run in test mode (no training)
+test_mode = False  # Set to True to run in test mode (no training)
 test_model_number = 64000
 test_num_episodes = 100  # Number of episodes to run in test mode
 
@@ -55,22 +55,22 @@ test_model_path = f"saved_models/dqn_model_episode_{test_model_number}.pth"
 
 hyperparams = {
     # Learning parameters
-    "hidden_dim": 64,
+    "hidden_dim": 128,
     "batch_size": 64,
     "epsilon": 1.0, # Probability of choosing a random action
-    "epsilon_decay": 0.998,
-    "epsilon_min": 0.05,
+    "epsilon_decay": 0.999,
+    "epsilon_min": 0.01,
     "num_episodes": 1000000,
     "learning_rate": 1e-4,
     "gamma": 0.99,
     "target_update_freq": 1000,
-    "replay_buffer_size": 100000,
+    "replay_buffer_size": 50000,
 
     # Custom reward parameters
     "r_death": -1.0,
     "r_top": -0.5,
-    "r_alive": 0.01,
-    "r_pipe": 1.0,
+    "r_alive": 0.1,
+    "r_pipe": 2.0,
 
     # Cosmetic/Logging parameters
     "EpisodeRewardDisplayFreq": 100,
@@ -84,11 +84,11 @@ def extract_features(observation):
     Refer to the observation space description above.
     """
     states = np.array([
-                observation[3], 
-                observation[4] - observation[9],  
-                observation[5] - observation[9],
-                observation[8] - observation[9],
-                observation[10]
+                observation[3]/288.0, 
+                (observation[4] - observation[9])/512.0,  
+                (observation[5] - observation[9])/512.0,
+                (observation[8] - observation[9])/512.0,
+                observation[10]/10.0
             ], dtype=np.float32)
     return states
 
