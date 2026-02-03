@@ -2,6 +2,8 @@
 Training script 
 """
 
+import os
+import datetime
 import torch
 import torch.optim as optim
 import random as rd
@@ -9,6 +11,12 @@ import numpy as np
 from networks import BirdDQN, ReplayBuffer
 
 def train(env, device, dqn, target_dqn, replay_buffer, optimizer, extract_features, hyperparams):
+    # Setting up logs and model directory
+    model_directory_path = f"models/models{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}"
+    logs_path = f"logs/logs{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}"
+    os.makedirs(model_directory_path, exist_ok=True)
+    logs = open(logs_path, "w")
+
     reward_map = {
         -1.0: hyperparams.get("r_death", -1.0),
         -0.5: hyperparams.get("r_top", -0.5),
@@ -82,13 +90,22 @@ def train(env, device, dqn, target_dqn, replay_buffer, optimizer, extract_featur
         if episode % hyperparams["EpisodeRewardDisplayFreq"] == 0:
             average_reward = np.mean(rewards_history[-hyperparams["EpisodeRewardDisplayFreq"]:])
             average_score = np.mean(score_history[-hyperparams["EpisodeRewardDisplayFreq"]:])
-            print(f"Episode: {episode}, Step {step}, Epsilon: {hyperparams['epsilon']:.4f}, ", 
-                  f"Average reward (last {hyperparams['EpisodeRewardDisplayFreq']} episodes): {average_reward:.2f}, ",
+            output = (f"Episode: {episode}, Step {step}, Epsilon: {hyperparams['epsilon']:.4f}, " +
+                  f"Average reward (last {hyperparams['EpisodeRewardDisplayFreq']} episodes): {average_reward:.2f}, " +
                   f"Average score (last {hyperparams['EpisodeRewardDisplayFreq']} episodes): {average_score:.2f}")
 
+            # Writing logs
+            logs.write(output + "\n")
+            logs.flush()
+
+            # Console output
+            print(output)
+
         if episode % hyperparams["ModelSaveFreq"] == 0:
-            torch.save(dqn.state_dict(), f"models/dqn_model_episode_{episode}.pth")
+            torch.save(dqn.state_dict(), f"{model_directory_path}/dqn_model_episode_{episode}.pth")
 
         
         hyperparams["epsilon"] *= hyperparams["epsilon_decay"]
         hyperparams["epsilon"] = max(hyperparams["epsilon"], hyperparams["epsilon_min"])
+    
+    logs.close()
