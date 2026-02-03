@@ -13,8 +13,12 @@ from networks import BirdDQN, ReplayBuffer
 def train(env, device, dqn, target_dqn, replay_buffer, optimizer, extract_features, hyperparams):
     # Setting up logs and model directory
     model_directory_path = f"models/models{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}"
-    logs_path = f"logs/logs{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}"
     os.makedirs(model_directory_path, exist_ok=True)
+    hyperparams_file = open(f"{model_directory_path}/hyperparameters.txt", "w")
+    for key, value in hyperparams.items():
+        hyperparams_file.write(f"{key}: {value}\n")
+    hyperparams_file.close()
+    logs_path = f"{model_directory_path}/logs.txt"
     logs = open(logs_path, "w")
 
     reward_map = {
