@@ -42,6 +42,7 @@ from train import train
 from test import test
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Using device: {device}")
 
 # Testing
 
@@ -55,26 +56,27 @@ test_model_path = f"saved_models/dqn_model_episode_{test_model_number}.pth"
 
 hyperparams = {
     # Learning parameters
-    "hidden_dim": 128,
-    "batch_size": 64,
+    "hidden_dim": 1024,
+    "batch_size": 512,
     "epsilon": 1.0, # Probability of choosing a random action
-    "epsilon_decay": 0.999,
+    "epsilon_decay": 0.9995,
     "epsilon_min": 0.01,
     "num_episodes": 1000000,
     "learning_rate": 1e-4,
     "gamma": 0.99,
-    "target_update_freq": 1000,
-    "replay_buffer_size": 50000,
+    "target_update_freq": 100,
+    "replay_buffer_size": 100000,
 
     # Custom reward parameters
-    "r_death": -1.0,
-    "r_top": -0.5,
-    "r_alive": 0.1,
-    "r_pipe": 2.0,
+    "r_death": -2.0,
+    "r_top": -0.05,
+    "r_alive": 0.01,
+    "r_pipe": 4.0, 
 
     # Cosmetic/Logging parameters
     "EpisodeRewardDisplayFreq": 100,
-    "ModelSaveFreq": 2000
+    "ModelSaveFreq": 2000,
+    "PlotFreq": 1000
 }
 
 # Features extraction

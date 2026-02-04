@@ -8,6 +8,7 @@ import torch
 import torch.optim as optim
 import random as rd
 import numpy as np
+import matplotlib.pyplot as plt
 from networks import BirdDQN, ReplayBuffer
 
 def train(env, device, dqn, target_dqn, replay_buffer, optimizer, extract_features, hyperparams):
@@ -30,7 +31,12 @@ def train(env, device, dqn, target_dqn, replay_buffer, optimizer, extract_featur
 
     step = 0
     rewards_history = []
+    average_reward_history = []
+    average_score_history = []
+    best_average_score = -float('inf')
     score_history = []
+
+    print("Starting training...")
     # Playing loop
     for episode in range(1, hyperparams["num_episodes"]+1):
         observation, info = env.reset()
@@ -75,7 +81,7 @@ def train(env, device, dqn, target_dqn, replay_buffer, optimizer, extract_featur
                     expected_q_values = rewards + (1 - dones) * hyperparams["gamma"] * max_next_q_values # Bellman equation
 
                 # We use Huber loss (Smooth L1 Loss) for stability instead of MSE
-                loss = torch.nn.functional.smooth_l1_loss(current_q_values, expected_q_values.unsqueeze(1))             
+                loss = torch.nn.functional.mse_loss(current_q_values, expected_q_values.unsqueeze(1))             
 
                 optimizer.zero_grad()
                 loss.backward()
@@ -91,9 +97,12 @@ def train(env, device, dqn, target_dqn, replay_buffer, optimizer, extract_featur
 
         rewards_history.append(episode_reward)
         score_history.append(info.get("score", 0))
+        average_reward = np.mean(rewards_history[-hyperparams["EpisodeRewardDisplayFreq"]:])
+        average_score = np.mean(score_history[-hyperparams["EpisodeRewardDisplayFreq"]:])
+        average_reward_history.append(average_reward)
+        average_score_history.append(average_score)
+
         if episode % hyperparams["EpisodeRewardDisplayFreq"] == 0:
-            average_reward = np.mean(rewards_history[-hyperparams["EpisodeRewardDisplayFreq"]:])
-            average_score = np.mean(score_history[-hyperparams["EpisodeRewardDisplayFreq"]:])
             output = (f"Episode: {episode}, Step {step}, Epsilon: {hyperparams['epsilon']:.4f}, " +
                   f"Average reward (last {hyperparams['EpisodeRewardDisplayFreq']} episodes): {average_reward:.2f}, " +
                   f"Average score (last {hyperparams['EpisodeRewardDisplayFreq']} episodes): {average_score:.2f}")
@@ -105,11 +114,35 @@ def train(env, device, dqn, target_dqn, replay_buffer, optimizer, extract_featur
             # Console output
             print(output)
 
-        if episode % hyperparams["ModelSaveFreq"] == 0:
+        if episode % hyperparams["ModelSaveFreq"] == 0 or (average_score > best_average_score and average_score >= 1.0):
             torch.save(dqn.state_dict(), f"{model_directory_path}/dqn_model_episode_{episode}.pth")
 
-        
+        if average_score > best_average_score:
+                best_average_score = average_score
+                logs.write(f"New best average score: {best_average_score:.2f} at episode {episode}\n")
+                logs.flush()
+
+        if episode % hyperparams["PlotFreq"] == 0:
+            # Plotting average reward history and score history 
+            plt.figure(figsize=(12,5))
+            plt.subplot(1, 2, 1)
+            plt.plot(average_reward_history)
+            plt.title('Average Episode Reward History')
+            plt.xlabel('Episode')
+            plt.ylabel('Reward')
+            plt.subplot(1, 2, 2)
+            plt.plot(average_score_history)
+            plt.title('Episode Score History')
+            plt.xlabel('Episode')
+            plt.ylabel('Score')
+            plt.tight_layout()
+            plt.savefig(f"{model_directory_path}/training_plot_episode_{episode}.png")
+            plt.close()
+            
+
         hyperparams["epsilon"] *= hyperparams["epsilon_decay"]
         hyperparams["epsilon"] = max(hyperparams["epsilon"], hyperparams["epsilon_min"])
     
     logs.close()
+
+    print("Training completed.")
