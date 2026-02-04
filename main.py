@@ -47,7 +47,7 @@ print(f"Using device: {device}")
 # Testing
 
 test_mode = False  # Set to True to run in test mode (no training)
-test_model_number = 64000
+test_model_number = 44000
 test_num_episodes = 100  # Number of episodes to run in test mode
 
 test_model_path = f"saved_models/dqn_model_episode_{test_model_number}.pth"
@@ -56,15 +56,15 @@ test_model_path = f"saved_models/dqn_model_episode_{test_model_number}.pth"
 
 hyperparams = {
     # Learning parameters
-    "hidden_dim": 1024,
+    "hidden_dim": 128,
     "batch_size": 512,
     "epsilon": 1.0, # Probability of choosing a random action
-    "epsilon_decay": 0.9995,
+    "epsilon_decay": 0.9999,
     "epsilon_min": 0.01,
     "num_episodes": 1000000,
     "learning_rate": 1e-4,
     "gamma": 0.99,
-    "target_update_freq": 100,
+    "target_update_freq": 1000,
     "replay_buffer_size": 100000,
 
     # Custom reward parameters
@@ -84,18 +84,19 @@ def extract_features(observation):
     """
     Defines which features to extract from the observation space. 
     Refer to the observation space description above.
+    Don't forget to update input_dim accordingly.
     """
     states = np.array([
                 observation[3]/288.0, 
                 (observation[4] - observation[9])/512.0,  
                 (observation[5] - observation[9])/512.0,
-                (observation[8] - observation[9])/512.0,
+                #(observation[8] - observation[9])/512.0,
                 observation[10]/10.0
             ], dtype=np.float32)
     return states
 
 # Initialize DQN and Replay Buffer
-input_dim = 5 # Update based on extracted features
+input_dim = 4 # Update based on extracted features
 output_dim = 2
 
 dqn = BirdDQN(input_dim, output_dim, hidden_dim=hyperparams["hidden_dim"]).to(device)
