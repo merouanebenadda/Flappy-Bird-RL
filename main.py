@@ -3,6 +3,7 @@
 
 Notes:
     Remove slots=True in Experience dataclass if using Python version < 3.10
+    The dimensions of the game screen are 288x512 pixels.
 
 
 Observation Space from env.step(action):
@@ -44,6 +45,9 @@ from test import test
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
+# Start training from existing model if desired
+resume_model_path = None  # Set to path of existing model to resume training, e.g., "saved_models/dqn_model_episode_20000.pth"
+
 # Testing
 
 test_mode = False  # Set to True to run in test mode (no training)
@@ -69,7 +73,7 @@ hyperparams = {
 
     # Custom reward parameters
     "r_death": -2.0,
-    "r_top": -0.05,
+    "r_top": -0.00,
     "r_alive": 0.01,
     "r_pipe": 4.0, 
 
@@ -99,7 +103,13 @@ def extract_features(observation):
 input_dim = 4 # Update based on extracted features
 output_dim = 2
 
-dqn = BirdDQN(input_dim, output_dim, hidden_dim=hyperparams["hidden_dim"]).to(device)
+if resume_model_path:
+    dqn = BirdDQN(input_dim, output_dim, hidden_dim=hyperparams["hidden_dim"]).to(device)
+    dqn.load_state_dict(torch.load(resume_model_path, map_location=device))
+    print(f"Resumed training from model: {resume_model_path}")
+else:
+    dqn = BirdDQN(input_dim, output_dim, hidden_dim=hyperparams["hidden_dim"]).to(device)
+
 target_dqn = BirdDQN(input_dim, output_dim, hidden_dim=hyperparams["hidden_dim"]).to(device)
 target_dqn.load_state_dict(dqn.state_dict()) # Initializing target DQN with same weights
 
